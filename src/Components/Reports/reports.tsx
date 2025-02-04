@@ -7,38 +7,38 @@ import { CustomResponse } from "../../Models/CustomResponse";
 import { Transaction } from "../../Models/Transaction";
 import { entityListStyles } from "../TransactionList/transactionList.styles";
 
-export const Insights: React.FC = (): JSX.Element => {
+export const Reports: React.FC = (): JSX.Element => {
     const services = useServices();
     const toaster = useToast();
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [topSpendingCategories, setTopSpendingCategories] = useState<{ category: string; totalAmount: number }[]>([]);
+    const [monthlySpending, setMonthlySpending] = useState<{ month: string; totalAmount: number }[]>([]);
 
     useEffect(() => {
-        fetchSpendingInsights();
+        fetchMonthlySpending();
     }, []);
 
-    const fetchSpendingInsights = async (): Promise<void> => {
+    const fetchMonthlySpending = async (): Promise<void> => {
         setIsLoading(true);
         try {
             const response: CustomResponse<Transaction[]> = await services.TransactionService.GetAll();
-            const categorySpending: Record<string, number> = {};
+            const monthSpending: Record<string, number> = {};
 
-            // Calculate the total spending per category
+            // Calculate total spending per month
             response.data.forEach((transaction) => {
-                if (transaction.amount) {
-                    categorySpending[transaction.category] = (categorySpending[transaction.category] || 0) + transaction.amount;
+                if (transaction.amount && transaction.date) {
+                    const month = new Date(transaction.date).toLocaleString("default", { month: "long", year: "numeric" });
+                    monthSpending[month] = (monthSpending[month] || 0) + transaction.amount;
                 }
             });
 
-            // Sort categories by total spending and get the top 3
-            const sortedCategories = Object.entries(categorySpending)
-                .map(([category, totalAmount]) => ({ category, totalAmount }))
-                .sort((a, b) => b.totalAmount - a.totalAmount)
-                .slice(0, 3);
+            // Sort months by total spending and get the list
+            const sortedMonths = Object.entries(monthSpending)
+                .map(([month, totalAmount]) => ({ month, totalAmount }))
+                .sort((a, b) => b.totalAmount - a.totalAmount);
 
-            setTopSpendingCategories(sortedCategories);
+            setMonthlySpending(sortedMonths);
         } catch (error) {
-            toaster.show({ message: "Error fetching spending insights", type: "error" });
+            toaster.show({ message: "Error fetching monthly spending analysis", type: "error" });
         } finally {
             setIsLoading(false);
         }
@@ -53,14 +53,14 @@ export const Insights: React.FC = (): JSX.Element => {
             ) : (
                 <ScrollView>
                     <Text variant="headlineMedium">
-                        Top 3 Categories by Spending
+                        Monthly Spending Analysis
                     </Text>
-                    {topSpendingCategories.map(({ category, totalAmount }, index) => (
+                    {monthlySpending.map(({ month, totalAmount }, index) => (
                         <List.Item
                             key={index}
-                            title={category}
+                            title={month}
                             description={`Total Spending: $${totalAmount.toFixed(2)}`}
-                            left={(props) => <List.Icon {...props} icon="cash" />}
+                            left={(props) => <List.Icon {...props} icon="calendar-month" />}
                         />
                     ))}
                 </ScrollView>

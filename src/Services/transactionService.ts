@@ -15,8 +15,10 @@ export class TransactionService {
 
     public async GetAll(): Promise<CustomResponse<Transaction[]>> {
         try {
+            console.log('Fetching all transactions from network.');
             const response: AxiosResponse<Transaction[]> = await axios.get(`${this._baseUrl}/transactions`);
 
+            console.log('Fetch all successfull, updating local db.');
             await Promise.all(response.data.map(async (transaction) => {
                 await this.localDatabase.AddOrUpdate(transaction);
             }));
@@ -44,6 +46,7 @@ export class TransactionService {
 
     public async Get(id: number): Promise<CustomResponse<Transaction>> {
         try {
+            console.log('Fetching transaction from network: ', id);
             const response: AxiosResponse<Transaction> = await axios.get<Transaction>(`${this._baseUrl}/transaction/${id}`);
             await this.localDatabase.AddOrUpdate(response.data);
             return {
@@ -68,18 +71,32 @@ export class TransactionService {
     }
 
     public async Create(transaction: Transaction): Promise<Transaction> {
-        const response: AxiosResponse<Transaction> = await axios.post<Transaction>(`${this._baseUrl}/transaction`, transaction);
-        this.localDatabase.AddOrUpdate(response.data);
-        return response.data;
+        console.log('Creating transaction');
+        try {
+            const response: AxiosResponse<Transaction> = await axios.post<Transaction>(`${this._baseUrl}/transaction`, transaction);
+            this.localDatabase.AddOrUpdate(response.data);
+            return response.data;
+        }
+        catch (error) {
+            console.log('Failed to create transaction: ', error);
+            throw new Error('Failed to create transaction');
+        }
     }
 
     public async Update(transaction: Transaction): Promise<Transaction> {
+        console.log('Updating transaction: ', transaction.id);
         const response: AxiosResponse<Transaction> = await axios.put<Transaction>(`${this._baseUrl}/transaction/${transaction.id}`, transaction);
         return response.data;
     }
 
     public async Delete(id: number): Promise<void> {
-        await axios.delete(`${this._baseUrl}/transaction/${id}`);
-        await this.localDatabase.Delete(id);
+        console.log('Deleting transaction: ', id);
+        try {
+            await axios.delete(`${this._baseUrl}/transaction/${id}`);
+            await this.localDatabase.Delete(id);
+        }
+        catch (error) {
+            console.log('Failed to delete transaction: ', id, error);
+        }
     }
 }

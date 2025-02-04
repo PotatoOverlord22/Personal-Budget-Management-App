@@ -99,4 +99,35 @@ export class TransactionService {
             console.log('Failed to delete transaction: ', id, error);
         }
     }
+
+    public async GetAllCustomPages(): Promise<CustomResponse<Transaction[]>> {
+        try {
+            console.log('Fetching all transactions from network.');
+            const response: AxiosResponse<Transaction[]> = await axios.get(`${this._baseUrl}/allTransactions`);
+
+            console.log('Fetch all successfull, updating local db.');
+            await Promise.all(response.data.map(async (transaction) => {
+                await this.localDatabase.AddOrUpdate(transaction);
+            }));
+
+            return {
+                data: response.data,
+                source: Sources.NETWORK
+            };
+        }
+        catch (error) {
+            console.log('Network request failed, falling back to local database:', error);
+            const localData: Transaction[] = await this.localDatabase.GetAll();
+
+            if (localData.length === 0) {
+                console.log('No transactions found in local database.');
+                throw new Error('No transactions found in local database.');
+            }
+
+            return {
+                data: localData,
+                source: Sources.LOCAL
+            };
+        }
+    }
 }

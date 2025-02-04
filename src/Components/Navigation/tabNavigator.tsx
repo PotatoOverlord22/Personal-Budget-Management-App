@@ -17,7 +17,7 @@ export const TabNavigator: React.FC = (): JSX.Element => {
                 component={TransactionList}
                 options={{
                     title: InternalRoutes.Transactions,
-                    tabBarIcon: "food",
+                    tabBarIcon: "book-open",
                 }}
             />
             <Tab.Screen

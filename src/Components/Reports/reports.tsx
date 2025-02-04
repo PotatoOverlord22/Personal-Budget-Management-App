@@ -6,6 +6,7 @@ import { useServices } from "../../Providers/servicesProvider";
 import { CustomResponse } from "../../Models/CustomResponse";
 import { Transaction } from "../../Models/Transaction";
 import { entityListStyles } from "../TransactionList/transactionList.styles";
+import { useFocusEffect } from "@react-navigation/native";
 
 export const Reports: React.FC = (): JSX.Element => {
     const services = useServices();
@@ -17,10 +18,16 @@ export const Reports: React.FC = (): JSX.Element => {
         fetchMonthlySpending();
     }, []);
 
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchMonthlySpending();
+        }, [])
+    );
+
     const fetchMonthlySpending = async (): Promise<void> => {
         setIsLoading(true);
         try {
-            const response: CustomResponse<Transaction[]> = await services.TransactionService.GetAll();
+            const response: CustomResponse<Transaction[]> = await services.TransactionService.GetAllCustomPages();
             const monthSpending: Record<string, number> = {};
 
             // Calculate total spending per month

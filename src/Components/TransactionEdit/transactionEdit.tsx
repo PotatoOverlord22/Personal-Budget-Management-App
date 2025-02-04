@@ -52,13 +52,11 @@ export const TransactionEdit: React.FC<EditNavigationProps> = (props: EditNaviga
             setTransaction(response.data);
         }
         catch (error) {
-            console.log(`Failed to fetch entity: `, error);
             toaster.show(fetchFailedToast);
         }
     };
 
     const onInputChange = (field: keyof Transaction, value: string | string[] | number | Date) => {
-        console.log(`${field}: `, value);
         setTransaction((prev) => ({
             ...prev,
             [field]: value,
@@ -69,7 +67,6 @@ export const TransactionEdit: React.FC<EditNavigationProps> = (props: EditNaviga
         try {
             switch (viewMode) {
                 case ViewModes.CREATE:
-                    console.log("entity: ", transaction);
                     await services.TransactionService.Create(transaction);
                     toaster.show(createSuccessToast);
                     props.navigation.navigate(InternalRoutes.TabNavigator);
@@ -82,7 +79,6 @@ export const TransactionEdit: React.FC<EditNavigationProps> = (props: EditNaviga
             }
         }
         catch (error) {
-            console.log(`Failed to ${viewMode} entity: `, error);
             toaster.show(saveFailedToast);
         }
     };
